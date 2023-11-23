@@ -45,6 +45,7 @@ def envs_irm_S(X_train, X_test, T_train, y_train, E, number_environments):
 
     environments = []
 
+    # 根据E将数据划分到各个环境中
     for i in range(number_environments):
         E_index = np.where(E == i)[0]
         X = X_train[E_index,:]
@@ -197,12 +198,14 @@ class InvariantRiskMinimization(object):
         loss = torch.nn.MSELoss()
 
         for iteration in range(args.number_IRM_iterations):
+            # print(self.w)
             penalty = 0
             error = 0
             for x_e, y_e in environments:
                 error_e = loss(x_e @ self.phi @ self.w, y_e)
                 penalty += grad(error_e, self.w,
                                 create_graph=True)[0].pow(2).mean()
+                print(penalty)
                 error += error_e
 
             opt.zero_grad()

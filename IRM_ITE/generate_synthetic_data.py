@@ -20,7 +20,7 @@ Note: functions to generate the synthetic data
 
 # necessary packages
 import numpy as np
-from scipy import random
+# from scipy import random
 
 def generate_synthetic_data(args):
     """Generate the synthetic data for Model B

@@ -95,6 +95,7 @@ if __name__ == '__main__':
       '-nd',
       '--item', action='store', nargs='*', dest='nd',
       help='list of dimension size', 
+      default='5,10,20,35,50',
       type=str)
   parser.add_argument(
       '--ne',
