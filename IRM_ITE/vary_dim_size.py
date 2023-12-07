@@ -35,7 +35,9 @@ def main (args):
     for j in range(len(number_dimension_list)):
       print("Running dimension: " + str(number_dimension_list[j]))
       args.nd = number_dimension_list[j]
+    #   print(X_train)
       X_train, T_train, y_train, X_test, T_test, test_potential_outcome = generate_synthetic_data(args)
+      print(X_train.shape)
 
       # ERM S
       erm_coeff, erm_potential_outcome_S, erm_ate_S = ERM_Sblock(X_train, T_train, X_test, y_train, args.model_type)
@@ -46,6 +48,8 @@ def main (args):
       # IRM S
       E = generate_E_random(args.ntr, args.ne)
       environments, featuresTest_control, featuresTest_treatment = envs_irm_S(X_train, X_test, T_train, y_train, E, args.ne)
+      print("environments:", environments)
+      print("featuresTest_control:", featuresTest_control.shape)
       irm_coeff, irm_potential_outcome_S, irm_ate_S = IRM_Sblock(environments, featuresTest_control, featuresTest_treatment, args)
       
       # IRM T

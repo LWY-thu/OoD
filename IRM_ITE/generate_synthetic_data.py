@@ -22,7 +22,7 @@ Note: functions to generate the synthetic data
 import numpy as np
 # from scipy import random
 
-def generate_synthetic_data(args):
+def generate_synthetic_data():
     """Generate the synthetic data for Model B
 
     Args:
@@ -36,15 +36,24 @@ def generate_synthetic_data(args):
     - test_potential_outcome: test potential outcomes
 
     """
-    number_training_obeservations = args.ntr
-    number_testing_obeservations = args.nte
-    number_dimensions = args.nd
-    mu = args.mu
-    feature_model = args.feature_model
-    outcome_model = args.outcome_model
-    sigma_outcome = args.sigma_outcome
-    number_environments = args.ne
+    # number_training_obeservations = args.ntr
+    # number_testing_obeservations = args.nte
+    # number_dimensions = args.nd
+    # mu = args.mu
+    # feature_model = args.feature_model
+    # outcome_model = args.outcome_model
+    # sigma_outcome = args.sigma_outcome
+    # number_environments = args.ne
     
+    number_training_obeservations = 200
+    number_testing_obeservations = 100
+    number_dimensions = 5
+    mu = 0.1
+    feature_model = "B"
+    outcome_model = "quadratic"
+    sigma_outcome = 1
+    number_environments = 2
+
     T_train = generate_T(number_training_obeservations)
     T_test = generate_T(number_testing_obeservations)
 

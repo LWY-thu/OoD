@@ -21,6 +21,7 @@ import numpy as np
 import torch
 from torch.autograd import grad
 
+
 def envs_irm_S(X_train, X_test, T_train, y_train, E, number_environments):
     """Compute the environments variable required by the InvariantRiskMinimization class for IRM_S / IRM_1
 
@@ -41,17 +42,17 @@ def envs_irm_S(X_train, X_test, T_train, y_train, E, number_environments):
     X_train = X_train.astype(np.float32)
     T_train = T_train.astype(np.float32)
     y_train = y_train.astype(np.float32)
-    XT_train =  np.multiply(X_train, T_train)
+    XT_train = np.multiply(X_train, T_train)
 
     environments = []
 
     # 根据E将数据划分到各个环境中
     for i in range(number_environments):
         E_index = np.where(E == i)[0]
-        X = X_train[E_index,:]
-        T = T_train[E_index,:]
-        y = y_train[E_index,:]
-        XT = XT_train[E_index,:]
+        X = X_train[E_index, :]
+        T = T_train[E_index, :]
+        y = y_train[E_index, :]
+        XT = XT_train[E_index, :]
         X_ = torch.from_numpy(X)
         T_ = torch.from_numpy(T)
         y_ = torch.from_numpy(y)
@@ -60,18 +61,21 @@ def envs_irm_S(X_train, X_test, T_train, y_train, E, number_environments):
         ones_training = torch.ones(X.shape[0], 1)
         features = torch.cat((ones_training, X_, T_, XT_), 1)
 
-        environments.append((features,y_))
+        environments.append((features, y_))
 
     X_test = X_test.astype(np.float32)
     X_test = torch.from_numpy(X_test)
     T_control = torch.zeros(X_test.size()[0], 1)
     T_treatment = torch.ones(X_test.size()[0], 1)
-    
+
     ones_testing = torch.ones(X_test.shape[0], 1)
-    featuresTest_control = torch.cat((ones_testing, X_test, T_control, torch.mul(X_test, T_control)), 1)
-    featuresTest_treatment = torch.cat((ones_testing, X_test, T_treatment, torch.mul(X_test, T_treatment)), 1)
-    
+    featuresTest_control = torch.cat(
+        (ones_testing, X_test, T_control, torch.mul(X_test, T_control)), 1)
+    featuresTest_treatment = torch.cat(
+        (ones_testing, X_test, T_treatment, torch.mul(X_test, T_treatment)), 1)
+
     return environments, featuresTest_control, featuresTest_treatment
+
 
 def envs_irm_T(X_train, y_train, E, number_environments):
     """Compute the environments variable required by the InvariantRiskMinimization class for IRM_T / IRM_2
@@ -93,16 +97,17 @@ def envs_irm_T(X_train, y_train, E, number_environments):
 
     for i in range(number_environments):
         E_index = np.where(E == i)[0]
-        X = X_train[E_index,:]
-        y = y_train[E_index,:]
+        X = X_train[E_index, :]
+        y = y_train[E_index, :]
         X_ = torch.from_numpy(X)
         y_ = torch.from_numpy(y)
 
         ones_training = torch.ones(X.shape[0], 1)
+        print(X.shape[0])
         features = torch.cat((ones_training, X_), 1)
-        
-        environments.append((features,y_))
-    
+
+        environments.append((features, y_))
+
     return environments
 
 
@@ -121,17 +126,20 @@ def IRM_Sblock(environments, featuresTest_control, featuresTest_treatment, args)
     - irm_ate: computed average treatment effect using IRM_S / IRM_1
 
     """
-    irm = InvariantRiskMinimization(environments, args)  
+    irm = InvariantRiskMinimization(environments, args)
     irm_coeff = irm.solution()
 
     outcomes_treatment = featuresTest_treatment @ irm_coeff
     outcomes_control = featuresTest_control @ irm_coeff
 
-    irm_potential_outcome = np.concatenate((outcomes_control.detach().numpy(),outcomes_treatment.detach().numpy()),axis=1)
-    irm_individual_effect = irm_potential_outcome[:,1] - irm_potential_outcome[:,0]
+    irm_potential_outcome = np.concatenate(
+        (outcomes_control.detach().numpy(), outcomes_treatment.detach().numpy()), axis=1)
+    irm_individual_effect = irm_potential_outcome[:,
+                                                  1] - irm_potential_outcome[:, 0]
     irm_ate = irm_individual_effect.mean()
-      
+
     return irm_coeff, irm_potential_outcome, irm_ate
+
 
 def IRM_Tblock(environments0, environments1, featuresTest, args):
     """Compute the model coefficients, potential outcomes, average treatment effect using IRM_T / IRM_2
@@ -148,18 +156,20 @@ def IRM_Tblock(environments0, environments1, featuresTest, args):
     - irm_ate: computed average treatment effect using IRM_T / IRM_2
 
     """
-    irm0 = InvariantRiskMinimization(environments0, args)  
+    irm0 = InvariantRiskMinimization(environments0, args)
     irm_coeff0 = irm0.solution()
     outcomes_control = featuresTest @ irm_coeff0
-    
-    irm1 = InvariantRiskMinimization(environments1, args)  
+
+    irm1 = InvariantRiskMinimization(environments1, args)
     irm_coeff1 = irm1.solution()
     outcomes_treatment = featuresTest @ irm_coeff1
 
-    irm_potential_outcome = np.concatenate((outcomes_control.detach().numpy(),outcomes_treatment.detach().numpy()),axis=1)
-    irm_individual_effect = irm_potential_outcome[:,1] - irm_potential_outcome[:,0]
+    irm_potential_outcome = np.concatenate(
+        (outcomes_control.detach().numpy(), outcomes_treatment.detach().numpy()), axis=1)
+    irm_individual_effect = irm_potential_outcome[:,
+                                                  1] - irm_potential_outcome[:, 0]
     irm_ate = irm_individual_effect.mean()
-      
+
     return irm_coeff0, irm_coeff1, irm_potential_outcome, irm_ate
 
 
@@ -167,6 +177,8 @@ def IRM_Tblock(environments0, environments1, featuresTest, args):
 The following class is borrowed from the code repository for Invariant Risk Minimzation -
 https://github.com/facebookresearch/InvariantRiskMinimization/blob/master/code/experiment_synthetic/models.py#L30
 """
+
+
 class InvariantRiskMinimization(object):
     def __init__(self, environments, args):
         best_reg = 0
@@ -205,14 +217,18 @@ class InvariantRiskMinimization(object):
                 error_e = loss(x_e @ self.phi @ self.w, y_e)
                 penalty += grad(error_e, self.w,
                                 create_graph=True)[0].pow(2).mean()
-                print(penalty)
+                # print(penalty)
                 error += error_e
 
             opt.zero_grad()
             (reg * error + (1 - reg) * penalty).backward()
             opt.step()
 
-
     def solution(self):
         return self.phi @ self.w
-        
+
+    def get_phi(self):
+        return self.phi
+
+    def get_w(self):
+        return self.w
